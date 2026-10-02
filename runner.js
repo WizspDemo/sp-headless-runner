@@ -63,6 +63,29 @@ async function runOnce() {
   const page = await browser.newPage();
   await page.authenticate({ username: APP_USER, password: APP_PASS });
 
+  // Headless Chromium reports the page as hidden/backgrounded by the Page
+  // Visibility API regardless of the launch flags above — many apps (and
+  // socket.io's own reconnection heuristics) react to that by throttling
+  // or tearing down long-lived connections. Force the page to always
+  // report itself as visible and focused.
+  const session = await page.target().createCDPSession();
+  await session.send('Emulation.setFocusEmulationEnabled', { enabled: true });
+  await page.evaluateOnNewDocument(() => {
+    Object.defineProperty(document, 'visibilityState', {
+      get: () => 'visible',
+    });
+    Object.defineProperty(document, 'hidden', {
+      get: () => false,
+    });
+    document.addEventListener(
+      'visibilitychange',
+      (e) => {
+        e.stopImmediatePropagation();
+      },
+      true,
+    );
+  });
+
   page.on('console', (msg) => {
     console.log('[page console]', msg.text());
   });

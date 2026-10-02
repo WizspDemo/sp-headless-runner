@@ -64,11 +64,7 @@ async function runOnce() {
   await page.authenticate({ username: APP_USER, password: APP_PASS });
 
   page.on('console', (msg) => {
-    const text = msg.text();
-    // Only surface our own bridge-connection logs, not routine app chatter.
-    if (/bridge|socket|WebRestApiBridge/i.test(text)) {
-      console.log('[page console]', text);
-    }
+    console.log('[page console]', msg.text());
   });
   page.on('pageerror', (err) => console.error('[page error]', err.message));
 

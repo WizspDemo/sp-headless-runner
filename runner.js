@@ -90,6 +90,12 @@ async function runOnce() {
     console.log('[page console]', msg.text());
   });
   page.on('pageerror', (err) => console.error('[page error]', err.message));
+  page.on('framenavigated', (frame) => {
+    if (frame === page.mainFrame()) {
+      console.log('[headless-runner] MAIN FRAME NAVIGATED to', frame.url());
+    }
+  });
+  page.on('load', () => console.log('[headless-runner] page LOAD event fired'));
 
   let shouldReload = false;
   page.on('close', () => {
